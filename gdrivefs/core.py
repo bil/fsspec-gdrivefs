@@ -44,6 +44,9 @@ class GoogleDriveFileSystem(AbstractFileSystem):
 
     def __init__(self, root_file_id=None, token="browser",
                  access="full_control", spaces='drive', creds=None,
+                 client_id = None, client_secret = None,
+                 use_local_webserver = True,
+                 redirect_uri = None,
                  **kwargs):
         """
         Access to dgrive as a file-system
@@ -56,7 +59,7 @@ class GoogleDriveFileSystem(AbstractFileSystem):
             be put in a browser, and cache the response for future use with token="cache".
             "browser" will remove any previously cached token file if it exists.
         :param access: str
-            One of "full_control", "read_only
+            One of "full_control", "read_only"
         :param spaces:
             Category of files to search, can be  'drive', 'appDataFolder' and 'photos'.
             Of these, only the first is general
@@ -69,6 +72,17 @@ class GoogleDriveFileSystem(AbstractFileSystem):
             don't want the user to be prompted to authenticate.
             The files need to be shared with the service account email address, that can be found
             in the json file.
+        :param client_id: None or str
+            Optional client_id to pass to pydata-google-auth's get_user_credentials function. If 
+            set to None, then the default PyData client_id and secret are used. These are public
+            facing, so performance might be affected.
+        :param client_secret: None or str
+            Optional client_secret to pass to pydata-google-auth's get_user_credentials function.
+        :param use_local_webserver: bool
+            Passed to pydata-google-auth's get_user_credentials function.
+        :param redirect_uri: None or str
+            Redirect URI to pass to PyData.
+            
         :param kwargs:
             Passed to parent
         """
@@ -104,9 +118,24 @@ class GoogleDriveFileSystem(AbstractFileSystem):
         return self._connect_cache()
 
     def _connect_cache(self):
-        return pydata_google_auth.get_user_credentials(
-            self.scopes, use_local_webserver=True
-        )
+        if self.use_local_webserver:
+            return pydata_google_auth.get_user_credentials(
+                self.scopes, 
+                client_id = self.client_id, client_secret = self.client_secret,
+                use_local_webserver = self.use_local_webserver
+            )
+        else:
+            if self.redirect_uri == None:
+                redirect_uri = 'https://sdk.cloud.google.com/authcode.html'
+            else:
+                redirect_uri = self.redirect_uri
+
+            return pydata_google_auth.get_user_credentials(
+                self.scopes, 
+                client_id = self.client_id, client_secret = self.client_secret,
+                use_local_webserver = self.use_local_webserver,
+                redirect_uri = redirect_uri
+            )
     
     def _connect_service_account(self):
         return service_account.Credentials.from_service_account_info(
