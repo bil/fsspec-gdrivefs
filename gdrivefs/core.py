@@ -93,6 +93,10 @@ class GoogleDriveFileSystem(AbstractFileSystem):
         self.spaces = spaces
         self.root_file_id = root_file_id or 'root'
         self.creds = creds
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.use_local_webserver = use_local_webserver
+        self.redirect_uri = redirect_uri
         self.connect(method=token)
 
     def connect(self, method=None):
