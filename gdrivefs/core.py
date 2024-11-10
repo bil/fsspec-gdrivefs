@@ -133,7 +133,7 @@ class GoogleDriveFileSystem(AbstractFileSystem):
     def _connect_cache(self):
         if any(self.client_id,self.client_secret,self.redirect_uri):
             if not all(self.client_id,self.client_secret,self.redirect_uri):
-                except OSError("client_id/client_secret/redirect_uri must all be provided if any is used.")
+                raise OSError("client_id/client_secret/redirect_uri must all be provided if any is used.")
                 
         return pydata_google_auth.get_user_credentials(
             self.scopes, 
